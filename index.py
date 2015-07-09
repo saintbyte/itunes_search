@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from flask import Flask,make_response
 import json
+import hashlib
 import os
 import sys
 import urllib
@@ -48,7 +49,23 @@ def find(first_name,last_name):
     for artist in data_arr['results']:
         if (artist['artistName'].lower() == artist_full_name and \
             artist['artistType'] == 'Artist'):
-            s = (r.getAllAlbumsByArtistId(artist['artistId'])).strip()
+            try:
+                s = (r.getAllAlbumsByArtistId(artist['artistId'])).strip()
+            except ItunesGetProblemException:
+                return resp_500('Connection itunes problem on get list albums')
+            except:
+                return resp_500('Internal Error on list albums')
+            try:
+                m = hashlib.md5()
+                m.update(s)
+                search_id = m.hexdigest()
+                s_arr = json.loads(s)
+                s_arr['search_id'] = search_id
+                fh = open('search_id/{}'.format(search_id),'w')
+                fh.close()
+                s = json.dumps(s_arr)
+            except:
+                return resp_500('A not found')
             return resp_ok(s)
     return resp_404('Albums not found')
 
