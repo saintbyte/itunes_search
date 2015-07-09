@@ -1,10 +1,27 @@
 #!/usr/bin/env python 
 # -*- coding: utf-8 -*-
-from flask import Flask
+from flask import Flask,make_response
 import json
 import os
 import sys
 import urllib
+from classes.itunes.request import AppleRequest
+from classes.exceptions.exceptions import ItunesException,ItunesZeroResultsException,\
+                                          ItunesGetProblemException
+
+def resp_json(s,code):
+    resp = make_response(s, code)
+    resp.headers['Content-Type'] = 'application/json; charset=utf-8'
+    return resp
+
+def resp_404(s):
+    return resp_json(s,404)
+
+def resp_500(s):
+    return resp_json(s,500)
+
+def resp_ok(s):
+    return resp_json(s,200)
 
 app = Flask(__name__)
 
@@ -14,7 +31,26 @@ def main():
 
 @app.route('/rest/find/<first_name>/<last_name>')
 def find(first_name,last_name):
-    return 'Main page'
+    r = AppleRequest()
+    try:
+        data_json = r.searchArtist('{} {}'.format(first_name,last_name))
+    except ItunesGetProblemException:
+        return resp_500('Connection itunes problem')
+    except:
+        return resp_500('Internal Error')
+    try:
+        data_arr = json.loads(data_json)
+    except:
+        return resp_500('Itunes json parse problem')
+    artist_full_name = ("{} {}".format(first_name,last_name)).lower()
+    if (data_arr['resultCount'] == 0):
+        return resp_404('Artist not found')
+    for artist in data_arr['results']:
+        if (artist['artistName'].lower() == artist_full_name and \
+            artist['artistType'] == 'Artist'):
+            s = (r.getAllAlbumsByArtistId(artist['artistId'])).strip()
+            return resp_ok(s)
+    return resp_404('Albums not found')
 
 @app.route('/album/<int:id>')
 def album(id):
