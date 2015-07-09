@@ -72,7 +72,22 @@ def find(first_name,last_name):
 
 @app.route('/album/<int:id>')
 def album(id):
+    r = AppleRequest()
+    try:
+        data_json = r.album(id)
+    except ItunesGetProblemException:
+        return resp_500('Connection itunes problem on get list songs')
+    except:
+        return resp_500('Internal Error on list songs')
+    try:
+        s_arr = json.loads(data_json)
+    except:
+        return resp_500('Internal Error on list songs on parse json')
+    if (s_arr['resultCount'] == 0):
+        resp_404('Songs not found')
+    return resp_ok(data_json)
     return 'Main page'
+
 
 @app.route('/request/<search_result_id>')
 def search_result(search_result_id):
@@ -82,5 +97,7 @@ def search_result(search_result_id):
         return resp_ok(s)
     except: 
         return resp_404('search_result_id not found')
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=3033,debug=True)

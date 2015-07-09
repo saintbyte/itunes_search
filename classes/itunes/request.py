@@ -27,5 +27,5 @@ class AppleRequest:
         return self.request(res)
 
     def album(self,album_id):
-        res = 'lookup?upc={}&entity=song'.format(album_id)
+        res = 'lookup?id={}&entity=song'.format(album_id)
         return self.request(res)
