@@ -86,7 +86,6 @@ def album(id):
     if (s_arr['resultCount'] == 0):
         resp_404('Songs not found')
     return resp_ok(data_json)
-    return 'Main page'
 
 
 @app.route('/request/<search_result_id>')
