@@ -61,9 +61,10 @@ def find(first_name,last_name):
                 search_id = m.hexdigest()
                 s_arr = json.loads(s)
                 s_arr['search_id'] = search_id
-                fh = open('search_id/{}'.format(search_id),'w')
-                fh.close()
                 s = json.dumps(s_arr)
+                fh = open('search_id/{}'.format(search_id),'w')
+                fh.write(s)
+                fh.close()
             except:
                 return resp_500('A not found')
             return resp_ok(s)
@@ -73,9 +74,13 @@ def find(first_name,last_name):
 def album(id):
     return 'Main page'
 
-@app.route('/request/<int:search_result_id>')
+@app.route('/request/<search_result_id>')
 def search_result(search_result_id):
-    return 'Main page'
-
+    filename = 'search_id/{}'.format(search_result_id)
+    try:
+        s = open(filename).read(os.path.getsize(filename))
+        return resp_ok(s)
+    except: 
+        return resp_404('search_result_id not found')
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=3033,debug=True)
